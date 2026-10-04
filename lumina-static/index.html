@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LUMINA — Lighting, inside out.</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap');
+
+    :root {
+      --color-studio: #6b879d;
+      --color-sky: #708fa2;
+      --color-white: #ffffff;
+      --color-muted-text: #e1eaf0;
+      --color-panel: #35586e;
+      --color-electric-green: #edff39;
+      --color-dark-accent: #10190c;
+      --media-ratio: calc(1672 / 941);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 400;
+      background: #0a1014;
+      color: var(--color-muted-text);
+    }
+
+    .container {
+      min-height: 100vh;
+      padding: 2rem;
+      max-width: 1672px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .wordmark {
+      font-size: 1.8rem;
+      letter-spacing: 0.18em;
+      color: var(--color-white);
+    }
+
+    .header-subtext {
+      color: var(--color-muted-text);
+      opacity: 0.75;
+    }
+
+    .title-block {
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 3rem;
+      color: var(--color-white);
+      margin-bottom: 0.6rem;
+      font-weight:400;
+    }
+
+    .subtitle {
+      font-size:1.1rem;
+      opacity:0.8;
+    }
+
+    .media-wrap {
+      position: relative;
+      width:100%;
+      aspect-ratio: var(--media-ratio);
+      border:3px solid var(--color-white);
+      border-radius:16px;
+      overflow:hidden;
+    }
+    @media (max-width:900px){
+      .media-wrap {
+        border-radius:12px;
+      }
+      .container {
+        padding: 1rem;
+      }
+      h1 {
+        font-size:2rem;
+      }
+    }
+
+    .media-canvas {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .hotspot {
+      position:absolute;
+      width:48px;
+      height:48px;
+      transform:translate(-50%,-50%);
+      border-radius:50%;
+      background:var(--color-electric-green);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      z-index: 10;
+    }
+    .hotspot::after {
+      content:"+";
+      color:#111;
+      font-size:22px;
+      font-weight:400;
+    }
+    .hotspot:hover .hottip {
+      opacity:1;
+    }
+    .hottip {
+      position:absolute;
+      bottom:120%;
+      white-space:nowrap;
+      background:#000000aa;
+      color:white;
+      padding:4px 8px;
+      border-radius:4px;
+      opacity:0;
+      transition:0.2s;
+      pointer-events:none;
+    }
+
+    .panel {
+      position:absolute;
+      background:var(--color-panel);
+      border:1px solid var(--color-muted-text);
+      border-radius:12px;
+      padding:1rem;
+      bottom:-160px;
+      left:50%;
+      transform:translateX(-50%);
+      width:min(90%, 700px);
+      z-index:20;
+    }
+
+    footer {
+      margin-top:4rem;
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:1rem;
+    }
+    @media (max-width:900px) {
+      footer {
+        grid-template-columns: repeat(2,1fr);
+      }
+    }
+
+    button {
+      padding: 6px 10px;
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <div class="wordmark">LUMINA</div>
+      <div class="header-subtext">Stage lighting design · Independent concept</div>
+    </div>
+  </header>
+
+  <div class="title-block">
+    <h1>Lighting, inside out.</h1>
+    <div class="subtitle">Explore beneath the surface. Select a point to begin.</div>
+  </div>
+
+  <div class="media-wrap" id="mediaWrap">
+    <canvas id="mainCanvas" class="media-canvas"></canvas>
+    <img id="detailImg" class="media-canvas" style="display:none;" alt="detail"/>
+
+    <!-- 4个热点 -->
+    <div class="hotspot" style="left:25%;top:48%;" data-id="optics">
+      <span class="hottip">光学系统</span>
+    </div>
+    <div class="hotspot" style="left:64%;top:72%;" data-id="power">
+      <span class="hottip">供电系统</span>
+    </div>
+    <div class="hotspot" style="left:55%;top:51%;" data-id="housing">
+      <span class="hottip">外壳配色</span>
+    </div>
+    <div class="hotspot" style="left:48%;top:71%;" data-id="lens">
+      <span class="hottip">镜头款式</span>
+    </div>
+
+    <!-- 外壳配色面板 -->
+    <div class="panel" id="housingPanel" style="display:none;">
+      <h3>外壳配色</h3>
+      <div style="display:flex;gap:0.5rem;margin:1rem 0;flex-wrap:wrap;">
+        <button data-val="studio-silver">studio-silver</button>
+        <button data-val="electric-green">electric-green</button>
+        <button data-val="lime-green">lime-green</button>
+        <button data-val="sky-blue">sky-blue</button>
+        <button data-val="graphite">graphite</button>
+      </div>
+      <button onclick="closeAllPanels()">关闭</button>
+    </div>
+
+    <!-- 镜头款式面板 -->
+    <div class="panel" id="lensPanel" style="display:none;">
+      <h3>镜头款式</h3>
+      <div style="display:flex;gap:0.5rem;margin:1rem 0;flex-wrap:wrap;">
+        <button data-val="multi-spoke">multi-spoke</button>
+        <button data-val="aero-disc">aero-disc</button>
+        <button data-val="sport-forged">sport-forged</button>
+      </div>
+      <button onclick="closeAllPanels()">关闭</button>
+    </div>
+  </div>
+
+  <footer>
+    <div>Optical system</div>
+    <div>Power architecture</div>
+    <div>Housing finishes</div>
+    <div>Lens designs</div>
+  </footer>
+  <div style="margin-top:1rem;opacity:0.6;">LUMINA — Design study</div>
+</div>
+
+<script>
+// 全局状态
+const state = {
+  activeHotspot: null,
+  viewMode: "overview", // overview | optics-detail | power-detail
+  selectedHousing: "studio-silver",
+  selectedLens: "multi-spoke"
+}
+
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+const detailImg = document.getElementById('detailImg');
+const housingPanel = document.getElementById('housingPanel');
+const lensPanel = document.getElementById('lensPanel');
+
+// 素材
+const assets = {
+  baseImg: new Image(),
+  fwdOptics: document.createElement('video'),
+  revOptics: document.createElement('video'),
+  fwdPower: document.createElement('video'),
+  revPower: document.createElement('video'),
+  imgOpticsDetail: new Image(),
+  imgPowerDetail: new Image()
+}
+assets.baseImg.src = "media/exterior-polished.png";
+assets.fwdOptics.src = "media/hood-hover-forward.mp4";
+assets.revOptics.src = "media/hood-hover-reverse.mp4";
+assets.fwdPower.src = "media/battery-hover-forward.mp4";
+assets.revPower.src = "media/battery-hover-reverse.mp4";
+assets.imgOpticsDetail.src = "media/drive-blue.png";
+assets.imgPowerDetail.src = "media/battery-blue.png";
+
+assets.fwdOptics.muted = true;
+assets.revOptics.muted = true;
+assets.fwdPower.muted = true;
+assets.revPower.muted = true;
+assets.fwdOptics.preload = "auto";
+assets.revOptics.preload = "auto";
+assets.fwdPower.preload = "auto";
+assets.revPower.preload = "auto";
+
+let ready = false;
+assets.baseImg.onload = ()=>{
+  canvas.width = assets.baseImg.naturalWidth;
+  canvas.height = assets.baseImg.naturalHeight;
+  ready = true;
+  drawBase();
+}
+function drawBase(){
+  ctx.drawImage(assets.baseImg,0,0,canvas.width,canvas.height);
+}
+
+// 渲染循环
+function renderLoop(){
+  if(!ready) {
+    requestAnimationFrame(renderLoop);
+    return;
+  }
+  if(state.viewMode !== "overview"){
+    canvas.style.display = "none";
+    if(state.viewMode === "optics-detail"){
+      detailImg.src = assets.imgOpticsDetail.src;
+    }else if(state.viewMode === "power-detail"){
+      detailImg.src = assets.imgPowerDetail.src;
+    }
+    detailImg.style.display = "block";
+  }else{
+    canvas.style.display = "block";
+    detailImg.style.display = "none";
+    if(state.activeHotspot === "optics"){
+      if(assets.fwdOptics.paused) assets.fwdOptics.currentTime=0, assets.fwdOptics.play();
+      ctx.drawImage(assets.fwdOptics,0,0,canvas.width,canvas.height);
+    }else if(state.activeHotspot === "power"){
+      if(assets.fwdPower.paused) assets.fwdPower.currentTime=0, assets.fwdPower.play();
+      ctx.drawImage(assets.fwdPower,0,0,canvas.width,canvas.height);
+    }else{
+      if(!assets.fwdOptics.paused){
+        assets.revOptics.currentTime = assets.fwdOptics.duration - assets.fwdOptics.currentTime;
+        assets.revOptics.play();
+        ctx.drawImage(assets.revOptics,0,0,canvas.width,canvas.height);
+      }else if(!assets.fwdPower.paused){
+        assets.revPower.currentTime = assets.fwdPower.duration - assets.fwdPower.currentTime;
+        assets.revPower.play();
+        ctx.drawImage(assets.revPower,0,0,canvas.width,canvas.height);
+      }else{
+        drawBase();
+      }
+    }
+  }
+  requestAnimationFrame(renderLoop);
+}
+renderLoop();
+
+// 热点事件
+const hotspots = document.querySelectorAll('.hotspot');
+hotspots.forEach(el=>{
+  const id = el.dataset.id;
+  el.addEventListener('mouseenter',()=>{
+    state.activeHotspot = id;
+  })
+  el.addEventListener('mouseleave',()=>{
+    state.activeHotspot = null;
+  })
+  el.addEventListener('click',()=>{
+    if(state.viewMode !== "overview") return;
+    closeAllPanels();
+    if(id === "optics"){
+      state.viewMode = "optics-detail";
+    }else if(id === "power"){
+      state.viewMode = "power-detail";
+    }else if(id === "housing"){
+      housingPanel.style.display = "block";
+    }else if(id === "lens"){
+      lensPanel.style.display = "block";
+    }
+  })
+})
+
+function closeAllPanels(){
+  housingPanel.style.display = "none";
+  lensPanel.style.display = "none";
+}
+window.closeAllPanels = closeAllPanels;
+
+// ESC
+window.addEventListener('keydown',(e)=>{
+  if(e.key === "Escape"){
+    closeAllPanels();
+    state.viewMode = "overview";
+    state.activeHotspot = null;
+  }
+})
+
+// 配色按钮事件
+document.querySelectorAll('#housingPanel button[data-val]').forEach(btn=>{
+  btn.onclick = ()=>{
+    state.selectedHousing = btn.dataset.val;
+    alert("已切换外壳配色："+state.selectedHousing+"\n（如需实时替换图片，可扩展图片替换逻辑）");
+  }
+})
+document.querySelectorAll('#lensPanel button[data-val]').forEach(btn=>{
+  btn.onclick = ()=>{
+    state.selectedLens = btn.dataset.val;
+    alert("已切换镜头款式："+state.selectedLens+"\n（如需实时替换图片，可扩展图片替换逻辑）");
+  }
+})
+</script>
+</body>
+</html>
